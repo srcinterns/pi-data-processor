@@ -1,3 +1,11 @@
+/*
+  Note: The following was borrow from the following Gist:
+  https://gist.github.com/albanpeignier/104902
+  
+  It has been modified slightly to function as a library instead of a main executable.
+  This should eventually be re-written to fit our needs more directly.
+*/
+
 /* 
   A Minimal Capture Program
 
