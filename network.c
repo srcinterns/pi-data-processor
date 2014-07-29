@@ -6,17 +6,19 @@
 #include <errno.h>
 #include <stdio.h>
 #include <netdb.h>
+#include <stdint.h>
 
 #include "network.h"
 
 int sockfd = -1;
+time_t start_time = 0;
 struct sockaddr target;
 socklen_t targetlen = sizeof(struct sockaddr);
 
-static unsigned calc_crc(char * buffer, size_t size)
+static uint16_t calc_crc(char * buffer, size_t size)
 {
 	int i;
-	unsigned ret = 17;
+	uint16_t ret = 17;
 
 	if (NULL == buffer) {
 		fprintf(stderr,"crc: NULL buffer received\n");
@@ -37,9 +39,10 @@ int net_init(char * address, char * port)
 	int rv;
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_DGRAM;
+
+	start_time = time(0);
 	
 	memset(&hints,0,sizeof(hints));
-
 
 	if ((NULL == address) || (NULL == port))
 	{
@@ -94,23 +97,22 @@ int net_send_pk(packet_t * pack)
 	return ret;	
 }
 
-// TODO: Put the args needed to build a packet in here
-int net_send_data()
+int net_send_data(uint8_t messageid, uint32_t timestamp, uint8_t * data, size_t datasz)
 {
 	packet_t out;
 
-	net_build_pk(&out);
+	net_build_pk(&out, messageid, timestamp, data, datasz);
 	net_send_pk(&out);
 
 	return 0;
 }
 
-// TODO: Determing args to this function
-int net_build_pk(packet_t * pack)
+int net_build_pk(packet_t * pack, uint8_t messageid, uint32_t timestamp, uint8_t * data, size_t datasz)
 {
 	// Load all the args into the struct here
-
-	pack->crc = calc_crc((char*) pack, sizeof(packet_t) - sizeof(unsigned));
+	pack->messageid = 0x0001;
+	pack->timestamp = timestamp;
+	memcpy(pack->data, data, (datasz <= PACKET_DATA_SIZE) ? datasz : PACKET_DATA_SIZE); // Hard max here, should probably never be triggered
 
 	return 0;
 }
