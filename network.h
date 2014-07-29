@@ -5,6 +5,7 @@
 
 #define PACKET_DATA_SIZE 512
 
+// Effectively disable struct packing, to ensure there is no padding
 #pragma pack(1)
 typedef struct
 {
