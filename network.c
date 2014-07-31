@@ -11,7 +11,6 @@
 #include "network.h"
 
 int sockfd = -1;
-time_t start_time = 0;
 struct sockaddr target;
 socklen_t targetlen = sizeof(struct sockaddr);
 
@@ -40,8 +39,6 @@ int net_init(char * address, char * port)
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_DGRAM;
 
-	start_time = time(0);
-	
 	memset(&hints,0,sizeof(hints));
 
 	if ((NULL == address) || (NULL == port))
@@ -58,7 +55,7 @@ int net_init(char * address, char * port)
 
 	for (p = servinfo;  p != NULL; p = p->ai_next)
 	{
-		if (-1 != (sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)))
+		if (-1 != (sockfd = socket(p->ai_family, p->ai_family, p->ai_protocol)))
 			break;
 	}
 	if (NULL == p)
@@ -90,7 +87,7 @@ int net_send_pk(packet_t * pack)
 	}
 
 	// NOTE: This needs to be changed if the size of the packet is variable
-	if (-1 == (ret = sendto(sockfd, pack, sizeof(pack), 0, &target, targetlen))) {
+	if (-1 == (ret = sendto(sockfd, pack, sizeof(packet_t), 0, &target, targetlen))) {
 		perror("net_send_pk");
 	}
 
@@ -110,7 +107,7 @@ int net_send_data(uint8_t messageid, uint32_t timestamp, uint8_t * data, size_t 
 int net_build_pk(packet_t * pack, uint8_t messageid, uint32_t timestamp, uint8_t * data, size_t datasz)
 {
 	// Load all the args into the struct here
-	pack->messageid = 0x0001;
+	pack->messageid = messageid;
 	pack->timestamp = timestamp;
 	memcpy(pack->data, data, (datasz <= PACKET_DATA_SIZE) ? datasz : PACKET_DATA_SIZE); // Hard max here, should probably never be triggered
 
