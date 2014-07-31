@@ -86,6 +86,8 @@ int net_send_pk(packet_t * pack)
 		return -1;
 	}
 
+	pack->timestamp = htonl(pack->timestamp);
+
 	// NOTE: This needs to be changed if the size of the packet is variable
 	if (-1 == (ret = sendto(sockfd, pack, sizeof(packet_t), 0, &target, targetlen))) {
 		perror("net_send_pk");
