@@ -27,18 +27,14 @@
 #include <alsa/asoundlib.h>
 #include "alsa.h"
 
-#define ALSA_BUFFER_SIZE (buffer_frames*snd_pcm_format_width(format)/8*2)
-
 static snd_pcm_t *capture_handle;
-int buffer_frames;
 unsigned int rate = 44100;
 snd_pcm_format_t format = SND_PCM_FORMAT_S16_LE;
 				
-int init_alsa_device(char *device, int frames)
+int init_alsa_device(char *device)
 {
 	int err;
 	snd_pcm_hw_params_t *hw_params;
-	buffer_frames = frames;
 
 	if ((err = snd_pcm_open(&capture_handle, device, SND_PCM_STREAM_CAPTURE, 0)) < 0) {
 		fprintf(stderr, "cannot open audio device %s(%s)\n", device, snd_strerror(err));
@@ -116,12 +112,12 @@ int deinit_alsa(void)
 	return 0;
 }
 
-// Note: Buffer must be of size (buffer_frames * width(format) / 8 * 2
+// Note: Buffer must be of size (ALSA_FRAMES * width(format) / 8 * 2
 int read_alsa_data(char * buffer)
 {
 	int err;
 
-	if ((err = snd_pcm_readi(capture_handle, buffer, buffer_frames)) != buffer_frames) {
+	if ((err = snd_pcm_readi(capture_handle, buffer, ALSA_FRAMES)) != ALSA_FRAMES) {
 		fprintf(stderr, "read from audio interface failed(%s)\n", snd_strerror(err));
 		return -1;
 	}

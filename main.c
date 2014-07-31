@@ -1,12 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+
+#define ALSA_FRAMES 128
+
 #include "alsa.h"
 
 int main(int argc, char ** argv)
 {
 
-	char * buffer;
+	char buffer;
 	FILE * output;
 	int size;
 	int i;
