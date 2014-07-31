@@ -117,7 +117,7 @@ int read_alsa_data(char * buffer)
 {
 	int err;
 
-	if ((err = snd_pcm_readi(capture_handle, buffer, ALSA_FRAMES)) != ALSA_FRAMES) {
+	if ((err = snd_pcm_readi(capture_handle, buffer, 512)) != 512) {
 		fprintf(stderr, "read from audio interface failed(%s)\n", snd_strerror(err));
 		return -1;
 	}
