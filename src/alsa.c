@@ -112,12 +112,11 @@ int deinit_alsa(void)
 	return 0;
 }
 
-// Note: Buffer must be of size (ALSA_FRAMES * width(format) / 8 * 2
-int read_alsa_data(char * buffer)
+int read_alsa_data(char * buffer, size_t frames)
 {
 	int err;
 
-	if ((err = snd_pcm_readi(capture_handle, buffer, 512)) != 512) {
+	if ((err = snd_pcm_readi(capture_handle, buffer, frames)) != frames) {
 		fprintf(stderr, "read from audio interface failed(%s)\n", snd_strerror(err));
 		return -1;
 	}
