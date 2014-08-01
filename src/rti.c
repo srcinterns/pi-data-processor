@@ -172,7 +172,7 @@ unsigned long process_radar_data(char** send, float* trigger, float* response){
 
      
     gettimeofday(&tv, NULL);
-    unsigned long time_in_micros_end = 1000000 * tv.tv_sec + tv.tv_usec;
+    //unsigned long time_in_micros_end = 1000000 * tv.tv_sec + tv.tv_usec;
 
     /*read the data from the audio port*/
   
@@ -182,24 +182,9 @@ unsigned long process_radar_data(char** send, float* trigger, float* response){
     
     //send_udp_message(timestamp, send_data, SAMPLES_PER_PULSE)
 
-  }
+  
 
 }
 
 
-int main() {
-
-  // array of 1024 signed shorts
-  // two 512 floats
-  while (True)
-
-  read_adio data
-
-   
-    process and send data
-
-         
-         
-      
-   
       
