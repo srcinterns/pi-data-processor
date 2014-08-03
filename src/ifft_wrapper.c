@@ -21,7 +21,7 @@
 static double* in;
 static double* out;
 static int N;
-fftw_plan p;
+static fftw_plan p;
 
 
 /*INIT_FFT - set up the ifft environment,
@@ -31,7 +31,7 @@ fftw_plan p;
 void init_fft(int buf_size){
     N = buf_size;
     in = (double*) fftw_malloc(sizeof(double) * N);
-    out = (fftw_complex*) fftw_malloc(sizeof(double) * N);
+    out = (double*) fftw_malloc(sizeof(double) * N);
     p = fftw_plan_r2r_1d(N, in, out, FFTW_BACKWARD, FFTW_ESIMATE);
 }
 

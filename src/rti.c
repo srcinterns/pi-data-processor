@@ -33,6 +33,10 @@
 #include <assert.h>
 #include <math.h>
 
+static float* start;
+static float* ifft_array;
+static float response_parsed[NUM_TRIGGERS][SAMPLES_PER_PULSE];
+
 /* FIND_TRIGGER_START - given the trigger array, if the data is greater
  * than a certain threshold, mark in the "start" array that value is
  * greater than the threshold.  Both arrays are meant to be of array size.*/
@@ -161,11 +165,16 @@ float find_max(float* array, int size){
 /*INIT PROCESSING -Set up the environment for the signal processing*/
 void init_processing(){
     init_fft(SAMPLES_PER_PULSE);
+    start = calloc(DATA_BUFFER_SIZE, sizeof(float));
+    ifft_array = calloc(SAMPLES_PER_PULSE, sizeof(float));
+
 }
 
 /*CLEAN UP PROCESSING - clean up the environment for signal processing*/
 void clean_up_processing(){
     end_fft();
+    free(start);
+    free(ifft_array);
 }
 
 /*PARSE RADAR DATA - traverse the two data array's and
@@ -180,9 +189,6 @@ void process_radar_data(char* intensity_time,
    int count = 0;
    int i;
    float average, max;
-   float start[DATA_BUFFER_SIZE];
-   float response_parsed[NUM_TRIGGERS][SAMPLES_PER_PULSE];
-   float ifft_array[SAMPLES_PER_PULSE];
 
    /*create a simplied edge trigger based off the transmit signal*/
    find_trigger_start(trigger, start, buf_size);

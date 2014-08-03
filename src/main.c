@@ -12,6 +12,7 @@ void sigint(int x)
 {
 	fprintf(stderr,"Received SIGINT, shutting down...\n");
 	net_close();
+    clean_up_processing();
 	deinit_alsa();
 	exit(2);
 }
