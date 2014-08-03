@@ -1,10 +1,3 @@
-from DAVE:
-
-radar_processing.h
-
-//data to send is a 2-d arra, preset to 0
-void process_radar_data(char* data_to_send, float* trigger, float* response);
-
 to put header file:
 
 
@@ -17,17 +10,8 @@ to put header file:
 
 -> DATA_BUFFER_SIZE - total size of buffer that stores audio data
 
+NOTE: I updated the code, but my computer is being weird so I can't download
+ the dependencies.  The Makefile needs to be updated to the new code, and
+ the code needs to be compiled.
 
-return the size of the time_domain
--freq domain all real values
-
-ifft_wrapper.h
-
-Zach or Eric:
-int ifft(float* frequency_doamin, float* time_domain, int size_of_freq_domain);
-
-dbv.h
-
-Zach:
-// take 20*log10(array[i])
-void dbv(float* array, int size)
+  --Dave
