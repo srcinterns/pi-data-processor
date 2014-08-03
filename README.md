@@ -9,6 +9,7 @@ Dependencies
 ------------
 
  * alsa library
+ * fftw library
 
 Usage
 -----
