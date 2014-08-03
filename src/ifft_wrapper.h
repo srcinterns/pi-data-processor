@@ -1,9 +1,9 @@
-
 #ifndef IFFT_WRAPPER_H
 #define IFFT_WRAPPER_H
 
-
-int ifft(float* time_domain, float* freq_domain, int size_freq_domain);
+void init_fft(int buf_size);
+void end_fft();
+void ifft(float* time_domain, float* freq_domain);
 
 
 

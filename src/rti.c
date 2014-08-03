@@ -1,12 +1,47 @@
+/*******************************************************/
+/* RTI.c - David Campbell
+ *  8/2/2014
+ *  personal email: dncswim76@gmail.com
+ *  src email dcampbell@srcinc.com
+ *
+ *  This file contains the API for processing radar data
+ *  that comes in from the audio device.  It is taylored
+ *  to work with the parameters that are laid out in
+ *  radar_config.h.
+ *
+ *  In general, there is data on two channels of
+ *  information.  The "trigger" channel contains
+ *  information that allows us to frame data into
+ *  a 2D array such that each element contains
+ *  the data within that pulses from the "response"
+ *  channel.  Once each array has been made for
+ *  each pulse, processing can be done on each
+ *  pulse to remove noise, translate incoming
+ *  frequencies to distance (via an ifft) and
+ *  map the frequencies to the power of the signal
+ *  (using the dbv function).  The final goal
+ *  will be to translate the data into a scale
+ *  of 0 to 255 based off the intensity of the
+ *  signal after it is processed*/
+/********************************************************/
+
 #include <stdlib.h>
 #include "radar_config.h"
 #include "rti.h"
+#include "dbv.h"
+#include "ifft_wrapper.h"
+#include <assert.h>
+#include <math.h>
 
-
-/* FIND_TRIGGER_START - if the value in the array is greater than a given
- *  threshold then change that value in the array to be 1*/
+/* FIND_TRIGGER_START - given the trigger array, if the data is greater
+ * than a certain threshold, mark in the "start" array that value is
+ * greater than the threshold.  Both arrays are meant to be of array size.*/
 void find_trigger_start(float* trigg_array, float* start, int array_size){
    int i;
+
+   assert(trigg_array != NULL);
+   assert(start != NULL);
+
    for (i = 0; i < array_size; i++) {
 
       if (trigg_array[i] > THRESHOLD)
@@ -18,19 +53,23 @@ void find_trigger_start(float* trigg_array, float* start, int array_size){
    return;
 }
 
-/*MEAN - find the average of the array over
-* the specified interval.  Both start and
-* stop are inclusive*/
+/* MEAN - find the average of the array over
+*   the specified interval.  Both start and
+*   stop are inclusive                    */
 float mean(float* array, int start, int stop){
 
    int i;
    float sum;
    float count = 0;
+
+   assert(array != NULL);
+
    for (i = start; i <= stop; i++){
      sum = sum + array[i];
      count++;
    }
    return sum/count;
+
 }
 
 /*ABS - find the absolute value of a float*/
@@ -41,20 +80,26 @@ float abs_value(float value){
 }
 
 /*FLOAT COPY - copy the elements from one float array
- * to another specified by a certain amount, and taking
- * the absolute value along the way!*/
+ * to another specified by a certain amount*/
 void float_cpy(float* arrayA, float* arrayB, int amount){
   int i;
+
+  assert(arrayA != NULL);
+  assert(arrayB != NULL);
+
   for (i = 0; i < amount; i++){
     arrayA[i] = arrayB[i];
   }
 }
 
 
-/*FLOAT ADD IMMEDIATE - subtract a scalar value
+/*FLOAT ADD IMMEDIATE - add a scalar value
  * from all the elements in the float array*/
 void float_addi(float* arrayA, float value, int size){
   int i;
+
+  assert(arrayA != NULL);
+
   for (i = 0; i < size; i++){
     arrayA[i] = arrayA[i] + value;
   }
@@ -63,6 +108,10 @@ void float_addi(float* arrayA, float value, int size){
 /*SUBTRACT ARRAY - arrayA[i] = arrayB[i] - arrayA[i]*/
 void sub_array(float* arrayA, float* arrayB, int size){
     int i;
+
+    assert(arrayA != NULL);
+    assert(arrayB != NULL);
+
     for (i = 0; i < size; i++)
         arrayA[i] = arrayB[i] - arrayA[i];
 }
@@ -72,6 +121,10 @@ void intensify(char* char_array, float* float_array, int size){
   int i;
   float temp_float;
   int temp;
+
+  assert(char_array != NULL);
+  assert(float_array != NULL);
+
   for (i = 0; i < size; i++){
     temp_float  = float_array[i] + 80;
 
@@ -87,9 +140,15 @@ void intensify(char* char_array, float* float_array, int size){
   }
 }
 
+
+/*FIND MAX - find that maximum value in the
+ * array*/
 float find_max(float* array, int size){
     int i;
     float max = 0;
+
+    assert(array != NULL);
+
     for ( i = 0; i < size; i++){
         if (array[i] > max)
             max = array[i];
@@ -99,20 +158,31 @@ float find_max(float* array, int size){
 }
 
 
+/*INIT PROCESSING -Set up the environment for the signal processing*/
+void init_processing(){
+    init_fft(SAMPLES_PER_PULSE);
+}
+
+/*CLEAN UP PROCESSING - clean up the environment for signal processing*/
+void clean_up_processing(){
+    end_fft();
+}
+
 /*PARSE RADAR DATA - traverse the two data array's and
  * use the start_array to determine
  * the start of a pulse.  Keep track of the pulse,
  * and log the pulse data based on the
- * pulse count into a 2 dimensional array, response_parsed*/
+ * pulse count into a 2 dimensional array, response_parsed.
+ * NOTE: intensity_time must be of size NUM_TRIGGERS*SAMPLES_PER_PULSE*/
 void process_radar_data(char* intensity_time,
                       float* trigger, float* response, int buf_size){
+
    int count = 0;
    int i;
-   float average;
+   float average, max;
    float start[DATA_BUFFER_SIZE];
    float response_parsed[NUM_TRIGGERS][SAMPLES_PER_PULSE];
-   float* ifft_array[SAMPLES_PER_PULSE];
-   float max;
+   float ifft_array[SAMPLES_PER_PULSE];
 
    /*create a simplied edge trigger based off the transmit signal*/
    find_trigger_start(trigger, start, buf_size);
@@ -133,10 +203,10 @@ void process_radar_data(char* intensity_time,
 
    }
 
-   /*subtract the avarage value*/
-   average = mean(response_parsed[i], 0, SAMPLES_PER_PULSE-1);
+   /*subtract the avarage value of each sub array!*/
    for(i = 0; i < NUM_TRIGGERS; i++){
-     float_addi(response_parsed[i], -1.0*average, SAMPLES_PER_PULSE);
+       average = mean(response_parsed[i], 0, SAMPLES_PER_PULSE-1);
+       float_addi(response_parsed[i], -1.0*average, SAMPLES_PER_PULSE);
    }
 
    /*create 2-pulse cancelor*/
