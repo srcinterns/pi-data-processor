@@ -17,6 +17,7 @@
 #include <fftw3.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "radar_config.h"
 
 static double* in;
 static double* out;
@@ -28,11 +29,12 @@ static fftw_plan p;
  * the buf size is the length of the two
  * arrays that the ifft will be working
  * on                                 */
-void init_fft(int buf_size){
-    N = buf_size;
-    in = (double*) fftw_malloc(sizeof(double) * N);
-    out = (double*) fftw_malloc(sizeof(double) * N);
+int init_fft(int buf_size){
+    N = buf_size + SAMPLES_PER_PULSE*8/2; //add room for zero padding
+    in = (double*) calloc(N, sizeof(double));
+    out = (double*) calloc(N, sizeof(double));
     p = fftw_plan_r2r_1d(N, in, out, FFTW_BACKWARD, FFTW_ESIMATE);
+    return N;
 }
 
 /*END FFT - end the ifft environment*/

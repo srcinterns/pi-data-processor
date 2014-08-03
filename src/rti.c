@@ -35,7 +35,6 @@
 
 static float* start;
 static float* ifft_array;
-static float response_parsed[NUM_TRIGGERS][SAMPLES_PER_PULSE];
 
 /* FIND_TRIGGER_START - given the trigger array, if the data is greater
  * than a certain threshold, mark in the "start" array that value is
@@ -164,9 +163,9 @@ float find_max(float* array, int size){
 
 /*INIT PROCESSING -Set up the environment for the signal processing*/
 void init_processing(){
-    init_fft(SAMPLES_PER_PULSE);
+    size_of_sendarray = init_fft(SAMPLES_PER_PULSE);
     start = calloc(DATA_BUFFER_SIZE, sizeof(float));
-    ifft_array = calloc(SAMPLES_PER_PULSE, sizeof(float));
+    ifft_array = calloc(size_of_sendarray, sizeof(float));
 
 }
 
@@ -189,6 +188,10 @@ void process_radar_data(char* intensity_time,
    int count = 0;
    int i;
    float average, max;
+
+   /*for size of radar data to be correct, init_processing must be
+    *called before this function                                */
+   float response_parsed[NUM_TRIGGERS][size_of_sendarray];
 
    /*create a simplied edge trigger based off the transmit signal*/
    find_trigger_start(trigger, start, buf_size);
@@ -221,14 +224,14 @@ void process_radar_data(char* intensity_time,
 
    /*ifft and convert to intensity values*/
    for(i = 0; i < NUM_TRIGGERS; i++){
-       ifft(ifft_array,response_parsed[i],SAMPLES_PER_PULSE);
-       float_cpy(response_parsed[i], ifft_array, SAMPLES_PER_PULSE);
-       dbv(response_parsed[i], SAMPLES_PER_PULSE);
+       ifft(ifft_array,response_parsed[i]);
+       float_cpy(response_parsed[i], ifft_array, size_of_sendarray);
+       dbv(response_parsed[i], size_of_sendarray);
    }
 
-   max = find_max(response_parsed, NUM_TRIGGERS*SAMPLES_PER_PULSE);
-   array_addi(response_parsed, -1.0*max, NUM_TRIGGERS*SAMPLES_PER_PULSE);
-   intensify(intensity_time, response_parsed, SAMPLES_PER_PULSE*NUM_TRIGGERS);
+   max = find_max(response_parsed, NUM_TRIGGERS*size_of_sendarray);
+   array_addi(response_parsed, -1.0*max, NUM_TRIGGERS*size_of_sendarray);
+   intensify(intensity_time, response_parsed, size_of_sendarray*NUM_TRIGGERS);
 
 }
 
