@@ -6,9 +6,9 @@ SHELL  = bash
 TARGET = processor
 CC     = gcc
 CCFL   = -c -g -Wall
-LDFL   = -Wall -lasound
+LDFL   = -Wall -lm -lfftw3 -lasound
 
-SRCS := main.c alsa.c network.c rti.c
+SRCS := main.c alsa.c network.c rti.c dbv.c ifft_wrapper.c
 
 OBJS := $(addprefix obj/,$(patsubst %.c,%.o,$(SRCS)))
 DEPS := $(addprefix dep/,$(patsubst %.c,%.d,$(SRCS)))

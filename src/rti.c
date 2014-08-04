@@ -134,7 +134,7 @@ void intensify(char* char_array, float* float_array, int size){
     if (temp_float < 0)
         temp_float = 0;
 
-    temp = round(((temp_float/80.0)*255));
+    temp = floorf(((temp_float/80.0)*255));
 
     if (temp > 255)
       temp = 255;
@@ -189,6 +189,10 @@ void process_radar_data(char* intensity_time,
    int i;
    float average, max;
 
+   assert(intensity_time != NULL);
+   assert(trigger != NULL);
+   assert(response != NULL);
+
    /*for size of radar data to be correct, init_processing must be
     *called before this function                                */
    float response_parsed[NUM_TRIGGERS][size_of_sendarray];
@@ -229,9 +233,9 @@ void process_radar_data(char* intensity_time,
        dbv(response_parsed[i], size_of_sendarray);
    }
 
-   max = find_max(response_parsed, NUM_TRIGGERS*size_of_sendarray);
-   array_addi(response_parsed, -1.0*max, NUM_TRIGGERS*size_of_sendarray);
-   intensify(intensity_time, response_parsed, size_of_sendarray*NUM_TRIGGERS);
+   max = find_max(&response_parsed[0][0], NUM_TRIGGERS*size_of_sendarray);
+   float_addi(&response_parsed[0][0], -1.0*max, NUM_TRIGGERS*size_of_sendarray);
+   intensify(intensity_time, &(response_parsed[0][0]), size_of_sendarray*NUM_TRIGGERS);
 
 }
 

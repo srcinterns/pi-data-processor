@@ -33,7 +33,7 @@ int init_fft(int buf_size){
     N = buf_size + SAMPLES_PER_PULSE*8/2; //add room for zero padding
     in = (double*) calloc(N, sizeof(double));
     out = (double*) calloc(N, sizeof(double));
-    p = fftw_plan_r2r_1d(N, in, out, FFTW_BACKWARD, FFTW_ESIMATE);
+    p = fftw_plan_r2r_1d(N, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
     return N;
 }
 
@@ -52,7 +52,7 @@ void flt2dbl(double* array_dbl, float* array_flt){
     assert(array_dbl != NULL);
     assert(array_flt != NULL);
 
-    for (i = 0; i < N, i++)
+    for (i = 0; i < N; i++)
         array_dbl[i] = (double)array_flt[i];
 }
 
@@ -65,7 +65,7 @@ void dbl2flt(float* array_flt, double* array_dbl){
     assert(array_dbl != NULL);
     assert(array_flt != NULL);
 
-    for (i = 0; i < N, i ++)
+    for (i = 0; i < N; i ++)
         /*we need to divide by N because the fftw library doesn't
          *do this*/
         array_flt[i] = (float)array_dbl[i]/((float)N);
