@@ -7,4 +7,4 @@ void clean_up_processing();
 void process_radar_data(char* intensity_time,
                         float* trigger, float* response, int buf_size);
 
-#endif;
+#endif
