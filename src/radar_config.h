@@ -3,7 +3,7 @@
 #define RADAR_CONFIG_H
 
 /*radar parameters*/
-#define SAMPLING_RATE (1000000.0)
+#define SAMPLING_RATE (44100.0)
 #define PULSE_TIME (20.0*0.001)
 #define SAMPLES_PER_PULSE (((int)(PULSE_TIME*SAMPLING_RATE))/1)
 #define NUM_TRIGGERS (500)

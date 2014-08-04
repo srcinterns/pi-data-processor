@@ -65,14 +65,14 @@ void dbl2flt(float* array_flt, fftw_complex* array_complex){
     int i;
     double A, B;
 
-    assert(array_dbl != NULL);
+    assert(array_complex != NULL);
     assert(array_flt != NULL);
 
     for (i = 0; i < N; i ++){
         /*we need to divide by N because the fftw library doesn't
          *do this*/
-        A = array_complex[0]/N;
-        B = array_complex[1]/N;
+        A = array_complex[i][0]/N;
+        B = array_complex[i][1]/N;
         array_flt[i] = (float)sqrt( A*A + B*B);
      }
 }
