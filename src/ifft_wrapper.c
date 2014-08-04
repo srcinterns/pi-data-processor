@@ -17,10 +17,11 @@
 #include <fftw3.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include "radar_config.h"
 
-static double* in;
-static double* out;
+static fftw_complex* in;
+static fftw_complex* out;
 static int N;
 static fftw_plan p;
 
@@ -31,9 +32,9 @@ static fftw_plan p;
  * on                                 */
 int init_fft(int buf_size){
     N = buf_size + SAMPLES_PER_PULSE*8/2; //add room for zero padding
-    in = (double*) calloc(N, sizeof(double));
-    out = (double*) calloc(N, sizeof(double));
-    p = fftw_plan_r2r_1d(N, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    p = fftw_plan_dft_1d(N, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
     return N;
 }
 
@@ -47,28 +48,33 @@ void end_fft(){
 
 /* FLOAT TO DOUBLE - convert an array of floats
  * to an array of doubles of size N (stored globally)*/
-void flt2dbl(double* array_dbl, float* array_flt){
+void flt2dbl(fftw_complex* array_complex, float* array_flt){
     int i;
-    assert(array_dbl != NULL);
+    assert(array_complex != NULL);
     assert(array_flt != NULL);
 
     for (i = 0; i < N; i++)
-        array_dbl[i] = (double)array_flt[i];
+        array_complex[i][0] = (double)array_flt[i];
+        array_complex[i][1] = 0;
 }
 
 /*DOUBLE TO FLOAT - convert a double array to a
  * float array of size N (stored globally)*/
-void dbl2flt(float* array_flt, double* array_dbl){
+void dbl2flt(float* array_flt, fftw_complex* array_complex){
 
     int i;
+    double A, B;
 
     assert(array_dbl != NULL);
     assert(array_flt != NULL);
 
-    for (i = 0; i < N; i ++)
+    for (i = 0; i < N; i ++){
         /*we need to divide by N because the fftw library doesn't
          *do this*/
-        array_flt[i] = (float)array_dbl[i]/((float)N);
+        A = array_complex[0]/N;
+        B = array_complex[1]/N;
+        array_flt[i] = (float)sqrt( A*A + B*B);
+     }
 }
 
 /*IFFT - copy the data into the ifft buffer,
