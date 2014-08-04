@@ -17,13 +17,12 @@ The above dependencies can be installed on a raspberry pi running Raspbian, or a
 Install fftw
 ------------
 
- * Get the tar file: http://www.fftw.org/fftw-3.3.4.tar.gz
- * (go to directory for downloads)
- * tar -xvf fftw-3.3.4.tar.gz
- * cd fftw-3.3.4
- * ./configure
- * make
- * make install
+ * `wget http://www.fftw.org/fftw-3.3.4.tar.gz` or some other downloading method
+ * `tar -xvf fftw-3.3.4.tar.gz`
+ * `cd fftw-3.3.4`
+ * `./configure`
+ * `make`
+ * `make install`
 
 Usage
 -----
