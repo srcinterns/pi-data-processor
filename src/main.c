@@ -3,17 +3,17 @@
 #include <stdio.h>
 #include <time.h>
 
-//#include "alsa.h"
-//#include "network.h"
+#include "alsa.h"
+#include "network.h"
 #include "rti.h"
 #include "radar_config.h"
 
 void sigint(int x)
 {
     fprintf(stderr,"Received SIGINT, shutting down...\n");
-    //  net_close();
+    net_close();
     clean_up_processing();
-    // deinit_alsa();
+    deinit_alsa();
     exit(2);
 }
 
@@ -27,11 +27,11 @@ int main(int argc, char ** argv)
     }
 
     signal(SIGINT, sigint);
-    //  init_alsa_device(argv[1]);
-//    net_init(argv[2],argv[3]);
+    init_alsa_device(argv[1]);
+    net_init(argv[2],argv[3]);
     init_processing(); //will populate size of send_array in config_array.h
 
-//    char send_data[NUM_TRIGGERS][size_of_sendarray];
+    char send_data[NUM_TRIGGERS][size_of_sendarray];
 
     for(;;) {
 
@@ -43,8 +43,8 @@ int main(int argc, char ** argv)
 
     }
 
-//    deinit_alsa();
-//    net_close();
+    deinit_alsa();
+    net_close();
     clean_up_processing();
 
     return 0;
