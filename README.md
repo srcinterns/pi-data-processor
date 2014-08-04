@@ -8,8 +8,11 @@ Records Radar data from a stereo microphone port, and outputs via UDP display da
 Dependencies
 ------------
 
- * alsa library
- * fftw library
+ * alsa library (libasound2-dev)
+ * fftw library (libfftw-dev)
+
+The above dependencies can be installed on a raspberry pi running Raspbian, or any Debian-based Linux machine, by running the command `sudo apt-get install libfftw-dev libasound2-dev`
+
 
 Install fftw
 ------------
