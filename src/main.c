@@ -3,14 +3,19 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "alsa.h"
+//#include "alsa.h"
 #include "network.h"
 #include "rti.h"
 #include "radar_config.h"
 #include "messagize.h"
-
+#include "utility.h"
 
 #define MESSAGE_ID (0x1)
+
+char* send_data;
+uint16_t* temp_buffer;
+float *trigger;
+float *response;
 
 void sigint(int x)
 {
@@ -18,6 +23,10 @@ void sigint(int x)
     net_close();
     clean_up_processing();
     deinit_alsa();
+    free(send_data);
+    free(temp_buffer);
+    free(trigger);
+    free(response);
     exit(2);
 }
 
@@ -35,10 +44,10 @@ int main(int argc, char ** argv)
     net_init(argv[2],argv[3]);
     init_processing(); //will populate size of send_array in config_array.h
 
-    char* send_data = (char*) calloc(NUM_TRIGGERS*size_of_sendarray, sizeof(char));
-    signed short* temp_buffer = (signed short*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
-    float *trigger = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
-    float *response = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
+    send_data = (char*) calloc(NUM_TRIGGERS*size_of_sendarray, sizeof(char));
+    temp_buffer = (uint16_t*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
+    trigger = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
+    response = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
     int i;
 
     for(;;) {
@@ -49,8 +58,7 @@ int main(int argc, char ** argv)
 
 
         /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
-        process_radar_data(&send_data[0][0], trigger,
-                           response, DATA_BUFFER_SIZE);
+        process_radar_data(send_data, trigger,response, DATA_BUFFER_SIZE);
         for (i = 0; i < NUM_TRIGGERS; i = i + 8){
             messagize_and_send(&send_data[NUM_TRIGGERS*i], size_of_sendarray);
         }
