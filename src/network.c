@@ -91,7 +91,7 @@ int net_send_data(uint8_t * data, uint32_t datasz)
 	
 	for (i = 0; i < temp; i++) {
 		net_build_pk(&out, segmentid, temp, i, data, MAX(datasz,MAX_DATA_SIZE));
-		datasz /= MAX_DATA_SIZE;
+		datasz -= MAX_DATA_SIZE;
 		net_send_pk(&out);
 	}
 	
