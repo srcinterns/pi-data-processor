@@ -10,26 +10,11 @@
 
 #include "network.h"
 
+#define MAX(a,b) ((a>b)?a:b)
+
 int sockfd = -1;
 struct sockaddr target;
 socklen_t targetlen = sizeof(struct sockaddr);
-
-static uint16_t calc_crc(char * buffer, size_t size)
-{
-	int i;
-	uint16_t ret = 17;
-
-	if (NULL == buffer) {
-		fprintf(stderr,"crc: NULL buffer received\n");
-		return ~0x0;
-	}
-
-	for (i = 0; i < size; i++) {
-		ret ^= buffer[i];
-	}
-
-	return ret;
-}
 
 
 int net_init(char * address, char * port)
@@ -81,37 +66,47 @@ int net_send_pk(packet_t * pack)
 {
 	int ret = 0;
 
+	// Get the effective size of the packet
+	int size = (sizeof(packet_t) - MAX_DATA_SIZE) + pack->size;
+
 	if (NULL == pack) {
 		fprintf(stderr,"net_send_pk: Packet is null!\n");
 		return -1;
 	}
 
-	pack->timestamp = htonl(pack->timestamp);
-
 	// NOTE: This needs to be changed if the size of the packet is variable
-	if (-1 == (ret = sendto(sockfd, pack, sizeof(packet_t), 0, &target, targetlen))) {
+	if (-1 == (ret = sendto(sockfd, pack, size, 0, &target, targetlen))) {
 		perror("net_send_pk");
 	}
 
 	return ret;	
 }
 
-int net_send_data(uint8_t messageid, uint32_t timestamp, uint8_t * data, size_t datasz)
+int net_send_data(uint8_t * data, uint32_t datasz)
 {
 	packet_t out;
-
-	net_build_pk(&out, messageid, timestamp, data, datasz);
-	net_send_pk(&out);
-
+	static uint16_t segmentid = 0;
+	uint8_t i;
+	uint8_t temp = (datasz / MAX_DATA_SIZE) + 1;
+	
+	for (i = 0; i < temp; i++) {
+		net_build_pk(&out, segmentid, temp, i, data, MAX(datasz,MAX_DATA_SIZE));
+		datasz /= MAX_DATA_SIZE;
+		net_send_pk(&out);
+	}
+	
+	segmentid++;
 	return 0;
 }
 
-int net_build_pk(packet_t * pack, uint8_t messageid, uint32_t timestamp, uint8_t * data, size_t datasz)
+int net_build_pk(packet_t * pack, uint16_t segmentid, uint8_t total, uint8_t seq, uint8_t * data, uint32_t datasz)
 {
 	// Load all the args into the struct here
-	pack->messageid = messageid;
-	pack->timestamp = timestamp;
-	memcpy(pack->data, data, (datasz <= PACKET_DATA_SIZE) ? datasz : PACKET_DATA_SIZE); // Hard max here, should probably never be triggered
+	pack->segmentid = segmentid;
+	pack->total = total;
+	pack->seq = seq;
+	pack->size = (uint16_t) datasz;
+	memcpy(pack->data, data, datasz);
 
 	return 0;
 }

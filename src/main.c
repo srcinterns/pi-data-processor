@@ -3,11 +3,10 @@
 #include <stdio.h>
 #include <time.h>
 
-//#include "alsa.h"
+#include "alsa.h"
 #include "network.h"
 #include "rti.h"
 #include "radar_config.h"
-#include "messagize.h"
 #include "utility.h"
 
 #define MESSAGE_ID (0x1)
@@ -60,7 +59,8 @@ int main(int argc, char ** argv)
         /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
         process_radar_data(send_data, trigger,response, DATA_BUFFER_SIZE);
         for (i = 0; i < NUM_TRIGGERS; i = i + 8){
-            messagize_and_send(&send_data[NUM_TRIGGERS*i], size_of_sendarray);
+            //messagize_and_send(&send_data[NUM_TRIGGERS*i], size_of_sendarray);
+			net_send_data((uint8_t*) &send_data[NUM_TRIGGERS*i], size_of_sendarray);
         }
     }
 
