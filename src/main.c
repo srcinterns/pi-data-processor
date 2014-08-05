@@ -60,7 +60,8 @@ int main(int argc, char ** argv)
         process_radar_data(send_data, trigger,response, DATA_BUFFER_SIZE);
         for (i = 0; i < NUM_TRIGGERS; i = i + 8){
             //messagize_and_send(&send_data[NUM_TRIGGERS*i], size_of_sendarray);
-			net_send_data((uint8_t*) &send_data[NUM_TRIGGERS*i], size_of_sendarray);
+	// TODO: Update this to trim out "peaks"	
+	//	net_send_data((uint8_t*) &send_data[NUM_TRIGGERS*i], size_of_sendarray);
         }
     }
 

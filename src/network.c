@@ -66,39 +66,30 @@ int net_send_pk(packet_t * pack)
 {
 	int ret = 0;
 
-	// Get the effective size of the packet
-	int size = (sizeof(packet_t) - MAX_DATA_SIZE) + pack->size;
-
 	if (NULL == pack) {
 		fprintf(stderr,"net_send_pk: Packet is null!\n");
 		return -1;
 	}
 
-	// NOTE: This needs to be changed if the size of the packet is variable
-	if (-1 == (ret = sendto(sockfd, pack, size, 0, &target, targetlen))) {
+	if (-1 == (ret = sendto(sockfd, pack, sizeof(packet_t), 0, &target, targetlen))) {
 		perror("net_send_pk");
 	}
 
 	return ret;	
 }
 
-int net_send_data(uint8_t * data, uint32_t datasz)
+int net_send_data(uint32_t segment, uint16_t index)
 {
 	packet_t out;
-	static uint16_t segmentid = 0;
-	uint8_t i;
-	uint8_t temp = (datasz / MAX_DATA_SIZE) + !!(datasz % MAX_DATA_SIZE);
-	
-	for (i = 0; i < temp; i++) {
-		net_build_pk(&out, segmentid, temp, i, data, MAX(datasz,MAX_DATA_SIZE));
-		datasz -= MAX_DATA_SIZE;
-		net_send_pk(&out);
-	}
-	
-	segmentid++;
+
+	out.segment = segment;
+	out.index = index;
+
+	net_send_pk(&out);	
+
 	return 0;
 }
-
+/*
 int net_build_pk(packet_t * pack, uint16_t segmentid, uint8_t total, uint8_t seq, uint8_t * data, uint32_t datasz)
 {
 	// Load all the args into the struct here
@@ -110,4 +101,4 @@ int net_build_pk(packet_t * pack, uint16_t segmentid, uint8_t total, uint8_t seq
 
 	return 0;
 }
-
+*/
