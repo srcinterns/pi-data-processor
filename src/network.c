@@ -87,7 +87,7 @@ int net_send_data(uint8_t * data, uint32_t datasz)
 	packet_t out;
 	static uint16_t segmentid = 0;
 	uint8_t i;
-	uint8_t temp = (datasz / MAX_DATA_SIZE) + 1;
+	uint8_t temp = (datasz / MAX_DATA_SIZE) + !!(datasz % MAX_DATA_SIZE);
 	
 	for (i = 0; i < temp; i++) {
 		net_build_pk(&out, segmentid, temp, i, data, MAX(datasz,MAX_DATA_SIZE));
