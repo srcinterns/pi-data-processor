@@ -1,14 +1,17 @@
 #
-# Makefile
+# Makefile graciously borrowed from http://github.com/richteer/iiag,
+# 	courtesy of sjrct.
 #
+# NOTE: Please do not push updates to this file unless it is meant
+#   to be a permanent change!
 
 SHELL  = bash
 TARGET = processor
 CC     = gcc
 CCFL   = -c -g -Wall
-LDFL   = -Wall -lm -lfftw3 #-lasound
+LDFL   = -Wall -lm -lfftw3 -lasound
 
-SRCS := main.c network.c rti.c dbv.c ifft_wrapper.c messagize.c #alsa.c
+SRCS := main.c network.c rti.c dbv.c ifft_wrapper.c alsa.c utility.c
 
 OBJS := $(addprefix obj/,$(patsubst %.c,%.o,$(SRCS)))
 DEPS := $(addprefix dep/,$(patsubst %.c,%.d,$(SRCS)))
