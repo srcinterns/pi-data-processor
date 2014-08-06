@@ -11,7 +11,7 @@
 #include "radar_config.h"
 #include "utility.h"
 
-#define POWER_CUTOFF (0)
+#define POWER_CUTOFF (10)
 
 char* send_data;
 uint16_t* temp_buffer;
@@ -66,7 +66,11 @@ void handle_args(int argc, char ** argv)
 	} else if ('\0' == target_port[0]) {
 		fprintf(stderr,"Error: Improper (or no) Port specified\n");
 		exit(1);
+	} else if (NULL == pcmfile) {
+		fprintf(stderr,"Error opening file!\n");
+		exit(1);
 	}
+	printf("Sending to %s:%s\n", target_ip, target_port);
 }
 
 int main(int argc, char ** argv)
@@ -76,10 +80,11 @@ int main(int argc, char ** argv)
 		print_help();
         return 1;
     }
+	handle_args(argc,argv);
 
     signal(SIGINT, sigint);
     //    init_alsa_device(alsa_device);
-    //net_init(target_ip,target_port);
+    net_init(target_ip,target_port);
     init_processing(); //will populate size of send_array in config_array.h
 
     send_data = (char*) calloc(NUM_TRIGGERS*size_of_sendarray, sizeof(char));
@@ -95,18 +100,21 @@ int main(int argc, char ** argv)
       /* read from the audio device and store in 2 float arrays*/
       //init_alsa_device(argv[1]);
 		if (NULL != pcmfile) {
+			fprintf(stderr,"read from file\n");
 			if (feof(pcmfile)) {
 				fprintf(stderr,"End of file reached!\n");
 				break;
 			}
 			fread(temp_buffer, sizeof(uint16_t), DATA_BUFFER_SIZE * 2, pcmfile); 
 			
-		} else
+		} else {
 	        read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
+			printf("read from alsa");
+		}
         s16_to_float_array(trigger, DATA_BUFFER_SIZE, 0, 1, temp_buffer);
         s16_to_float_array(response, DATA_BUFFER_SIZE, 1, 1, temp_buffer);
 
-	for ( i = 0; i <4*DATA_BUFFER_SIZE; i++)
+//	for ( i = 0; i <4*DATA_BUFFER_SIZE; i++)
 //	  printf("%X\n", temp_buffer[i]);
 
         /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
@@ -118,14 +126,13 @@ int main(int argc, char ** argv)
 	  printf("%d: ", count);
 	  for (j = 0; j < size_of_sendarray; j++){
 	    if (send_data[NUM_TRIGGERS*i +j] >= POWER_CUTOFF) {
-	      // printf("%d ", send_data[NUM_TRIGGERS*i +j]);
-	      //	      net_send_data(count,j);
+	       printf("%d ", send_data[NUM_TRIGGERS*i +j]);
+	      	      //net_send_data(count,j);
 	    }
 	  }
 	  printf("\n");
 	  count++;
         }
-	deinit_alsa();
     }
 
 
