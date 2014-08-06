@@ -14,7 +14,7 @@
 #define POWER_CUTOFF (10)
 
 char* send_data;
-uint16_t* temp_buffer;
+int16_t* temp_buffer;
 float *trigger;
 float *response;
 FILE * pcmfile = NULL;
@@ -88,7 +88,7 @@ int main(int argc, char ** argv)
     init_processing(); //will populate size of send_array in config_array.h
 
     send_data = (char*) calloc(NUM_TRIGGERS*size_of_sendarray, sizeof(char));
-    temp_buffer = (uint16_t*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
+    temp_buffer = (int16_t*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
     dump_buffer = (char*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
     trigger = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
     response = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
@@ -109,7 +109,7 @@ int main(int argc, char ** argv)
 	  fprintf(stderr,"End of file reached!\n");
 	  break;
 	}
-	fread(temp_buffer, sizeof(uint16_t), DATA_BUFFER_SIZE * 2, pcmfile); 
+	fread(temp_buffer, sizeof(int16_t), DATA_BUFFER_SIZE * 2, pcmfile); 
 			
       } else {
 	read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
