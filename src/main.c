@@ -11,7 +11,7 @@
 #include "radar_config.h"
 #include "utility.h"
 
-#define POWER_CUTOFF (10)
+#define POWER_CUTOFF (50)
 
 char* send_data;
 int16_t* temp_buffer;
@@ -130,7 +130,7 @@ int main(int argc, char ** argv)
 	printf("%d: ", count);
 	for (j = 0; j < size_of_sendarray; j++){
 	  if (send_data[NUM_TRIGGERS*i +j] >= POWER_CUTOFF) {
-	    printf("%d ", send_data[NUM_TRIGGERS*i +j]);
+	    printf("%d ", j);
 	    //net_send_data(count,j);
 	  }
 	}

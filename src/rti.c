@@ -35,8 +35,11 @@
 #include <math.h>
 #include <string.h>
 
-#define PRINT_TRIGGERING
+//#define PRINT_TRIGGERING
 //#define PRINT_PARSED
+//#define PRINT_IFFT
+//#define PRINT_AVERAGED
+#define PRINT_CANCELOR
 
 static char* start;
 static float* ifft_array;
@@ -50,8 +53,6 @@ void find_trigger_start(float* trigg_array, char* start, int array_size){
    assert(trigg_array != NULL);
    assert(start != NULL);
 
-   printf("Processing Trigger Start...");
-
    for (i = 0; i < array_size; i++) {
 
      if (trigg_array[i] > THRESHOLD){
@@ -61,23 +62,20 @@ void find_trigger_start(float* trigg_array, char* start, int array_size){
 
    }
 
-   printf("Trigger Start Processed\n");
    return;
 }
 
-float char_mean(char* array, int start, int stop){
+int none(char* array, int start, int stop){
 
    int i;
-   float sum;
-   float count = 0;
 
    assert(array != NULL);
 
    for (i = start; i <= stop; i++){
-     sum = sum + (float)array[i];
-     count++;
+     if (array[i] != 0) 
+       return FALSE;
    }
-   return sum/count;
+   return TRUE;
 
 }
 
@@ -228,7 +226,7 @@ void process_radar_data(char* intensity_time,
 
 #ifdef PRINT_TRIGGERING
    for (i = 0; i < buf_size; i++) {
-     printf("%d: %d %f\n", i, start[i], trigger[i]);
+     printf("%d: %d %f %f\n", i, start[i], trigger[i], response[i]);
    }
 #endif
 
@@ -236,16 +234,15 @@ void process_radar_data(char* intensity_time,
 
      /*find the trigger and if found, load data into the 2-d array,
        while keeping track of the time of the pulse*/
-      if (start[i] == 1 && char_mean(start,i-11,i-1) == 0){
-
-          float_cpy(response_parsed[count], &response[i], SAMPLES_PER_PULSE);
-          count = count + 1;
-      }
-
-      /*only record for a preset amount of triggers*/
-      if (count == NUM_TRIGGERS)
-	break;
-
+     if (start[i] == 1 && none(start,i-11,i-1) == 0){
+       float_cpy(response_parsed[count], &response[i], SAMPLES_PER_PULSE);
+       count = count + 1;
+     }
+   
+     /*only record for a preset amount of triggers*/
+     if (count == NUM_TRIGGERS)
+       break;
+     
    }
 
 #ifdef PRINT_PARSED
@@ -264,9 +261,34 @@ void process_radar_data(char* intensity_time,
        float_addi(response_parsed[i], -1.0*average, SAMPLES_PER_PULSE);
    }
 
+
+#ifdef PRINT_AVERAGED
+
+   for (i = 0; i < NUM_TRIGGERS; i++){
+     for (j = 0; j < SAMPLES_PER_PULSE/10; j++) {
+       printf("%d ", (int)floorf(response_parsed[i][j]));
+     }
+     printf("\n");
+   }
+#endif
+
+
+
    /*create 2-pulse cancelor*/
    for (i = 1; i < NUM_TRIGGERS; i++)
        sub_array(response_parsed[i], response_parsed[i-1], SAMPLES_PER_PULSE);
+
+
+#ifdef PRINT_CANCELOR
+
+   for (i = 0; i < NUM_TRIGGERS; i++){
+     for (j = 0; j < SAMPLES_PER_PULSE/10; j++) {
+       printf("%d ", (int)floorf(response_parsed[i][j]));
+     }
+     printf("\n");
+   }
+#endif
+
 
    /*ifft and convert to intensity values*/
    for(i = 0; i < NUM_TRIGGERS; i++){
@@ -279,7 +301,7 @@ void process_radar_data(char* intensity_time,
 #ifdef PRINT_IFFT
    for (i = 0; i < NUM_TRIGGERS; i++){
      for (j = 0; j < SAMPLES_PER_PULSE/10; j++) {
-       printf("%d ", (int)floorf(response_parsed[i][j]));
+       printf("%d ", (int)floor(response_parsed[i][j]));
      }
      printf("\n");
    }
@@ -291,6 +313,18 @@ void process_radar_data(char* intensity_time,
    float_addi(&response_parsed[0][0], -1.0*max, NUM_TRIGGERS*size_of_sendarray);
 
    intensify(intensity_time, &(response_parsed[0][0]), size_of_sendarray*NUM_TRIGGERS);
+
+
+#ifdef PRINT_FINAL
+   for (i = 0; i < NUM_TRIGGERS; i++){
+     for (j = 0; j < SAMPLES_PER_PULSE/10; j++) {
+       printf("%d ", (int)floor(intensity_time[NUM_TRIGGERS*i+j]));
+     }
+     printf("\n");
+   }
+#endif
+
+
 
 }
 
