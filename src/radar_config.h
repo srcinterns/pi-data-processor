@@ -6,7 +6,7 @@
 #define SAMPLING_RATE (44100.0)
 #define PULSE_TIME (20.0*0.001)
 #define SAMPLES_PER_PULSE (((int)(PULSE_TIME*SAMPLING_RATE))/1)
-#define NUM_TRIGGERS (500)
+#define NUM_TRIGGERS (2)
 
 #define DATA_BUFFER_SIZE ((NUM_TRIGGERS+1)*SAMPLES_PER_PULSE)
 
@@ -22,6 +22,7 @@
 #define TRUE (1)
 #define FALSE (0)
 
+char* dump_buffer;
 int size_of_sendarray;
 
 #endif

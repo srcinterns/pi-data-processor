@@ -31,7 +31,7 @@ static fftw_plan p;
  * arrays that the ifft will be working
  * on                                 */
 int init_fft(int buf_size){
-    N = buf_size + SAMPLES_PER_PULSE*8/2; //add room for zero padding
+  N = (int)pow(2, ceil(log2((double)buf_size)));
     in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
     out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
     p = fftw_plan_dft_1d(N, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
