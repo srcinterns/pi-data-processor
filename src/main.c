@@ -99,40 +99,44 @@ int main(int argc, char ** argv)
     for(;;) {
       /* read from the audio device and store in 2 float arrays*/
       //init_alsa_device(argv[1]);
-		if (NULL != pcmfile) {
-			fprintf(stderr,"read from file\n");
-			if (feof(pcmfile)) {
-				fprintf(stderr,"End of file reached!\n");
-				break;
-			}
-			fread(temp_buffer, sizeof(uint16_t), DATA_BUFFER_SIZE * 2, pcmfile); 
+
+
+      /* if the pcmfile is define then read from the file, else read the
+       * alse data                                                     */
+      if (NULL != pcmfile) {
+	fprintf(stderr,"read from file\n");
+	if (feof(pcmfile)) {
+	  fprintf(stderr,"End of file reached!\n");
+	  break;
+	}
+	fread(temp_buffer, sizeof(uint16_t), DATA_BUFFER_SIZE * 2, pcmfile); 
 			
-		} else {
-	        read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
-			printf("read from alsa");
-		}
-        s16_to_float_array(trigger, DATA_BUFFER_SIZE, 0, 1, temp_buffer);
-        s16_to_float_array(response, DATA_BUFFER_SIZE, 1, 1, temp_buffer);
+      } else {
+	read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
+	printf("read from alsa");
+      }
 
-//	for ( i = 0; i <4*DATA_BUFFER_SIZE; i++)
-//	  printf("%X\n", temp_buffer[i]);
 
-        /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
-        process_radar_data(send_data, trigger,response, DATA_BUFFER_SIZE);
 
-	/* send small carrier messages per row, if greater than a threshold, 
-           send the index that indicates an object is there              */
-        for (i = 0; i < NUM_TRIGGERS; i = i + 1){
-	  printf("%d: ", count);
-	  for (j = 0; j < size_of_sendarray; j++){
-	    if (send_data[NUM_TRIGGERS*i +j] >= POWER_CUTOFF) {
-	       printf("%d ", send_data[NUM_TRIGGERS*i +j]);
-	      	      //net_send_data(count,j);
-	    }
+      s16_to_float_array(trigger, DATA_BUFFER_SIZE, 0, 1, temp_buffer);
+      s16_to_float_array(response, DATA_BUFFER_SIZE, 1, 1, temp_buffer);
+
+      /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
+      process_radar_data(send_data, trigger, response, DATA_BUFFER_SIZE);
+
+      /* send small carrier messages per row, if greater than a threshold, 
+	 send the index that indicates an object is there              */
+      for (i = 0; i < NUM_TRIGGERS; i = i + 1){
+	printf("%d: ", count);
+	for (j = 0; j < size_of_sendarray; j++){
+	  if (send_data[NUM_TRIGGERS*i +j] >= POWER_CUTOFF) {
+	    printf("%d ", send_data[NUM_TRIGGERS*i +j]);
+	    //net_send_data(count,j);
 	  }
-	  printf("\n");
-	  count++;
-        }
+	}
+	printf("\n");
+	count++;
+      }
     }
 
 
