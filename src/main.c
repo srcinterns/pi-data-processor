@@ -118,8 +118,8 @@ int main(int argc, char ** argv)
 
 
 
-      s16_to_float_array(trigger, DATA_BUFFER_SIZE, 0, 1, temp_buffer);
-      s16_to_float_array(response, DATA_BUFFER_SIZE, 1, 1, temp_buffer);
+      s16_to_float_array(trigger, DATA_BUFFER_SIZE, 1, 1, temp_buffer);
+      s16_to_float_array(response, DATA_BUFFER_SIZE, 0, 1, temp_buffer);
 
       /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
       process_radar_data(send_data, trigger, response, DATA_BUFFER_SIZE);

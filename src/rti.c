@@ -35,8 +35,8 @@
 #include <math.h>
 #include <string.h>
 
-//#define PRINT_TRIGGERING
-#define PRINT_PARSED
+#define PRINT_TRIGGERING
+//#define PRINT_PARSED
 
 static char* start;
 static float* ifft_array;
@@ -226,7 +226,7 @@ void process_radar_data(char* intensity_time,
    memset(start, 0, buf_size);
    find_trigger_start(trigger, start, buf_size);
 
-#ifdef PRINT_TIGGERING
+#ifdef PRINT_TRIGGERING
    for (i = 0; i < buf_size; i++) {
      printf("%d: %d %f\n", i, start[i], trigger[i]);
    }
