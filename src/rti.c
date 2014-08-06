@@ -33,14 +33,18 @@
 #include "ifft_wrapper.h"
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
-static float* start;
+//#define PRINT_TRIGGERING
+#define PRINT_PARSED
+
+static char* start;
 static float* ifft_array;
 
 /* FIND_TRIGGER_START - given the trigger array, if the data is greater
  * than a certain threshold, mark in the "start" array that value is
  * greater than the threshold.  Both arrays are meant to be of array size.*/
-void find_trigger_start(float* trigg_array, float* start, int array_size){
+void find_trigger_start(float* trigg_array, char* start, int array_size){
    int i;
 
    assert(trigg_array != NULL);
@@ -50,15 +54,31 @@ void find_trigger_start(float* trigg_array, float* start, int array_size){
 
    for (i = 0; i < array_size; i++) {
 
-      if (trigg_array[i] > THRESHOLD)
+     if (trigg_array[i] > THRESHOLD){
 	start[i] = 1;
-      else
+     }else
 	start[i] = 0;
 
    }
 
    printf("Trigger Start Processed\n");
    return;
+}
+
+float char_mean(char* array, int start, int stop){
+
+   int i;
+   float sum;
+   float count = 0;
+
+   assert(array != NULL);
+
+   for (i = start; i <= stop; i++){
+     sum = sum + (float)array[i];
+     count++;
+   }
+   return sum/count;
+
 }
 
 /* MEAN - find the average of the array over
@@ -169,7 +189,7 @@ float find_max(float* array, int size){
 /*INIT PROCESSING -Set up the environment for the signal processing*/
 void init_processing(){
     size_of_sendarray = init_fft(SAMPLES_PER_PULSE);
-    start = calloc(DATA_BUFFER_SIZE, sizeof(float));
+    start = calloc(DATA_BUFFER_SIZE, sizeof(char));
     ifft_array = calloc(size_of_sendarray, sizeof(float));
 
 }
@@ -191,7 +211,7 @@ void process_radar_data(char* intensity_time,
                       float* trigger, float* response, int buf_size){
 
    int count = 0;
-   int i;
+   int i, j;
    float average, max;
 
    assert(intensity_time != NULL);
@@ -203,15 +223,20 @@ void process_radar_data(char* intensity_time,
    float response_parsed[NUM_TRIGGERS][size_of_sendarray];
 
    /*create a simplied edge trigger based off the transmit signal*/
+   memset(start, 0, buf_size);
    find_trigger_start(trigger, start, buf_size);
 
-   printf("Trigger\n");
+#ifdef PRINT_TIGGERING
+   for (i = 0; i < buf_size; i++) {
+     printf("%d: %d %f\n", i, start[i], trigger[i]);
+   }
+#endif
 
    for(i = 13; i < buf_size-SAMPLES_PER_PULSE; i++){
 
      /*find the trigger and if found, load data into the 2-d array,
        while keeping track of the time of the pulse*/
-      if (start[i] == 1 && mean(start,i-11,i-1) == 0){
+      if (start[i] == 1 && char_mean(start,i-11,i-1) == 0){
 
           float_cpy(response_parsed[count], &response[i], SAMPLES_PER_PULSE);
           count = count + 1;
@@ -223,7 +248,15 @@ void process_radar_data(char* intensity_time,
 
    }
 
-   printf("parsed\n");
+#ifdef PRINT_PARSED
+
+   for (i = 0; i < NUM_TRIGGERS; i++){
+     for (j = 0; j < SAMPLES_PER_PULSE/10; j++) {
+       printf("%d ", (int)floorf(response_parsed[i][j]));
+     }
+     printf("\n");
+   }
+#endif
 
    /*subtract the avarage value of each sub array!*/
    for(i = 0; i < NUM_TRIGGERS; i++){
@@ -231,14 +264,9 @@ void process_radar_data(char* intensity_time,
        float_addi(response_parsed[i], -1.0*average, SAMPLES_PER_PULSE);
    }
 
-   printf("averaged\n");
-
    /*create 2-pulse cancelor*/
    for (i = 1; i < NUM_TRIGGERS; i++)
        sub_array(response_parsed[i], response_parsed[i-1], SAMPLES_PER_PULSE);
-
-   printf("cancelor\n");
-
 
    /*ifft and convert to intensity values*/
    for(i = 0; i < NUM_TRIGGERS; i++){
@@ -247,13 +275,19 @@ void process_radar_data(char* intensity_time,
        dbv(response_parsed[i], size_of_sendarray);
    }
 
-   printf("ifft\n");
+#ifdef PRINT_IFFT
+   for (i = 0; i < NUM_TRIGGERS; i++){
+     for (j = 0; j < SAMPLES_PER_PULSE/10; j++) {
+       printf("%d ", (int)floorf(response_parsed[i][j]));
+     }
+     printf("\n");
+   }
+#endif
+
 
    max = find_max(&response_parsed[0][0], NUM_TRIGGERS*size_of_sendarray);
 
    float_addi(&response_parsed[0][0], -1.0*max, NUM_TRIGGERS*size_of_sendarray);
-
-   printf("intensified\n");
 
    intensify(intensity_time, &(response_parsed[0][0]), size_of_sendarray*NUM_TRIGGERS);
 
