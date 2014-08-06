@@ -32,7 +32,6 @@
 #include "dbv.h"
 #include "ifft_wrapper.h"
 #include <assert.h>
-#include "alsa.h"
 #include <math.h>
 
 static float* start;
@@ -251,7 +250,6 @@ void process_radar_data(char* intensity_time,
    printf("ifft\n");
 
    max = find_max(&response_parsed[0][0], NUM_TRIGGERS*size_of_sendarray);
-   read_alsa_data(dump_buffer, DATA_BUFFER_SIZE);
 
    float_addi(&response_parsed[0][0], -1.0*max, NUM_TRIGGERS*size_of_sendarray);
 

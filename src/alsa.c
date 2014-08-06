@@ -30,6 +30,7 @@
 static snd_pcm_t *capture_handle;
 unsigned int rate = 44100;
 snd_pcm_format_t format = SND_PCM_FORMAT_S16_LE;
+char initialized = 0;
 
 int init_alsa_device(char *device)
 {
@@ -102,7 +103,7 @@ int init_alsa_device(char *device)
 	}
 
 	fprintf(stdout, "audio interface prepared\n");
-
+	initialized = 1;
 	return 0;
 }
 
@@ -115,6 +116,10 @@ int deinit_alsa(void)
 int read_alsa_data(char * buffer, size_t frames)
 {
 	int err;
+	if (!initialized) {
+		fprintf(stderr,"Alsa device not initialized, run init_alsa_device first!\n");
+	return -2;
+	}
 
 	if ((err = snd_pcm_readi(capture_handle, buffer, frames)) != frames) {
 		fprintf(stderr, "read from audio interface failed(%s)\n", snd_strerror(err));

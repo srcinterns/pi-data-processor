@@ -2,6 +2,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "alsa.h"
@@ -16,6 +17,10 @@ char* send_data;
 uint16_t* temp_buffer;
 float *trigger;
 float *response;
+FILE * pcmfile = NULL;
+char alsa_device[255] = {0};
+char target_ip[16] = {0};
+char target_port[6] = {0};
 
 void sigint(int x)
 {
@@ -30,18 +35,51 @@ void sigint(int x)
     exit(2);
 }
 
+void print_help(void)
+{
+	printf("Usage: ./processor  [-a|-f] <source> [-i] <dest IP> [-p] <dest Port>\n");
+	printf("\t-a\tUse alsa device defined by <source>\n");
+	printf("\t-f\tRead in from raw pcm data in <source>\n");
+	printf("\t-i\tTarget IP to send data to\n");
+	printf("\t-p\tTarget Port\n");
+
+}
+
+void handle_args(int argc, char ** argv)
+{
+	int i, mode = 0;
+	for (i = 1; i < argc; i++) {
+		switch(argv[i][1]) {
+			case 'a': strcpy(alsa_device, argv[++i]);  mode++; break;
+			case 'f': pcmfile = fopen(argv[++i], "r"); mode--; break;
+			case 'i': strcpy(target_ip, argv[++i]);            break;
+			case 'p': strcpy(target_port, argv[++i]);          break;
+			default:  print_help(), exit(1);                   break;
+		}
+	}
+	if (0 == mode) {
+		fprintf(stderr,"Error: Either -a or -f need to be specified\n");
+		exit(1);
+	} else if ('\0' == target_ip[0]) {
+		fprintf(stderr,"Error: Improper (or no) IP Address specified\n");
+		exit(1);
+	} else if ('\0' == target_port[0]) {
+		fprintf(stderr,"Error: Improper (or no) Port specified\n");
+		exit(1);
+	}
+}
 
 int main(int argc, char ** argv)
 {
-/*
-    if (argc != 4) {
-        fprintf(stderr,"Usage: %s <device-name> <ip address> <port>\n",argv[0]);
+
+    if (argc < 2) {
+		print_help();
         return 1;
     }
-*/
+
     signal(SIGINT, sigint);
-    //    init_alsa_device(argv[1]);
-    //net_init(argv[2],argv[3]);
+    //    init_alsa_device(alsa_device);
+    //net_init(target_ip,target_port);
     init_processing(); //will populate size of send_array in config_array.h
 
     send_data = (char*) calloc(NUM_TRIGGERS*size_of_sendarray, sizeof(char));
@@ -55,13 +93,21 @@ int main(int argc, char ** argv)
 
     for(;;) {
       /* read from the audio device and store in 2 float arrays*/
-      init_alsa_device(argv[1]);
-        read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
+      //init_alsa_device(argv[1]);
+		if (NULL != pcmfile) {
+			if (feof(pcmfile)) {
+				fprintf(stderr,"End of file reached!\n");
+				break;
+			}
+			fread(temp_buffer, sizeof(uint16_t), DATA_BUFFER_SIZE * 2, pcmfile); 
+			
+		} else
+	        read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
         s16_to_float_array(trigger, DATA_BUFFER_SIZE, 0, 1, temp_buffer);
         s16_to_float_array(response, DATA_BUFFER_SIZE, 1, 1, temp_buffer);
 
 	for ( i = 0; i <4*DATA_BUFFER_SIZE; i++)
-	  printf("%X\n", temp_buffer[i]);
+//	  printf("%X\n", temp_buffer[i]);
 
         /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
         process_radar_data(send_data, trigger,response, DATA_BUFFER_SIZE);
