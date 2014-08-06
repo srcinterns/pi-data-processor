@@ -67,7 +67,7 @@ void find_trigger_start(float* trigg_array, float* start, int array_size){
 float mean(float* array, int start, int stop){
 
    int i;
-   float sum;
+   float sum = 0;
    float count = 0;
 
    assert(array != NULL);
@@ -244,6 +244,7 @@ void process_radar_data(char* intensity_time,
    for(i = 0; i < NUM_TRIGGERS; i++){
        ifft(ifft_array,response_parsed[i]);
        float_cpy(response_parsed[i], ifft_array, size_of_sendarray);
+		
        dbv(response_parsed[i], size_of_sendarray);
    }
 
