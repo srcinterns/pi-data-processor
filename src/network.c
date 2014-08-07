@@ -82,8 +82,8 @@ int net_send_data(uint32_t segment, uint16_t index)
 {
 	packet_t out;
 
-	out.segment = segment;
-	out.index = index;
+	out.segment = htonl(segment);
+	out.index = htons(index);
 
 	net_send_pk(&out);	
 
