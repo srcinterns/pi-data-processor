@@ -5,11 +5,12 @@
 #include <string.h>
 #include <time.h>
 
-#include "alsa.h"
+//#include "alsa.h"
 #include "network.h"
 #include "rti.h"
 #include "radar_config.h"
 #include "utility.h"
+#include "debug_print.h"
 
 #define POWER_CUTOFF (50)
 
@@ -27,7 +28,7 @@ void sigint(int x)
     fprintf(stderr,"Received SIGINT, shutting down...\n");
     net_close();
     clean_up_processing();
-    deinit_alsa();
+    //  deinit_alsa();
     free(send_data);
     free(temp_buffer);
     free(trigger);
@@ -92,29 +93,28 @@ int main(int argc, char ** argv)
     dump_buffer = (char*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
     trigger = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
     response = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
-    int i, j, count;
+    int i, j;
 
-    count = 0;
 
     for(;;) {
-      /* read from the audio device and store in 2 float arrays*/
-      //init_alsa_device(argv[1]);
+        /* read from the audio device and store in 2 float arrays*/
+        //init_alsa_device(argv[1]);
 
 
-      /* if the pcmfile is define then read from the file, else read the
-       * alse data                                                     */
-      if (NULL != pcmfile) {
-	fprintf(stderr,"read from file\n");
-	if (feof(pcmfile)) {
-	  fprintf(stderr,"End of file reached!\n");
-	  break;
-	}
-	fread(temp_buffer, sizeof(int16_t), DATA_BUFFER_SIZE * 2, pcmfile); 
-			
-      } else {
-	read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
-	printf("read from alsa");
-      }
+        /* if the pcmfile is define then read from the file, else read the
+         * alse data                                                     */
+        if (NULL != pcmfile) {
+//            fprintf(stderr,"read from file\n");
+            if (feof(pcmfile)) {
+                fprintf(stderr,"End of file reached!\n");
+                break;
+            }
+            fread(temp_buffer, sizeof(int16_t), DATA_BUFFER_SIZE * 2, pcmfile);
+
+        } else {
+//	read_alsa_data((char*)temp_buffer, DATA_BUFFER_SIZE);
+            printf("read from alsa");
+        }
 
 
 
@@ -124,18 +124,10 @@ int main(int argc, char ** argv)
       /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
       process_radar_data(send_data, trigger, response, DATA_BUFFER_SIZE);
 
-      /* send small carrier messages per row, if greater than a threshold, 
-	 send the index that indicates an object is there              */
+      /* send small carrier messages per row, if greater than a threshold,
+         send the index that indicates an object is there              */
       for (i = 0; i < NUM_TRIGGERS; i = i + 1){
-	printf("%d: ", count);
-	for (j = 0; j < size_of_sendarray; j++){
-	  if (send_data[NUM_TRIGGERS*i +j] >= POWER_CUTOFF) {
-	    printf("%d ", j);
-	    //net_send_data(count,j);
-	  }
-	}
-	printf("\n");
-	count++;
+          print_data_line(&send_data[NUM_TRIGGERS*i], 3*size_of_sendarray/4);
       }
     }
 
@@ -144,7 +136,7 @@ int main(int argc, char ** argv)
     free(temp_buffer);
     free(trigger);
     free(response);
-    deinit_alsa();
+    //deinit_alsa();
     net_close();
     clean_up_processing();
 

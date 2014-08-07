@@ -39,7 +39,7 @@
 //#define PRINT_PARSED
 //#define PRINT_IFFT
 //#define PRINT_AVERAGED
-#define PRINT_CANCELOR
+//#define PRINT_CANCELOR
 
 static char* start;
 static float* ifft_array;
@@ -72,7 +72,7 @@ int none(char* array, int start, int stop){
    assert(array != NULL);
 
    for (i = start; i <= stop; i++){
-     if (array[i] != 0) 
+     if (array[i] != 0)
        return FALSE;
    }
    return TRUE;
@@ -238,11 +238,11 @@ void process_radar_data(char* intensity_time,
        float_cpy(response_parsed[count], &response[i], SAMPLES_PER_PULSE);
        count = count + 1;
      }
-   
+
      /*only record for a preset amount of triggers*/
      if (count == NUM_TRIGGERS)
        break;
-     
+
    }
 
 #ifdef PRINT_PARSED
@@ -294,7 +294,7 @@ void process_radar_data(char* intensity_time,
    for(i = 0; i < NUM_TRIGGERS; i++){
        ifft(ifft_array,response_parsed[i]);
        float_cpy(response_parsed[i], ifft_array, size_of_sendarray);
-		
+
        dbv(response_parsed[i], size_of_sendarray);
    }
 
