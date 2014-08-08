@@ -12,7 +12,7 @@
 #include "utility.h"
 #include "debug_print.h"
 
-#define POWER_CUTOFF (50)
+#define POWER_CUTOFF (20)
 
 char* send_data;
 int16_t* temp_buffer;
@@ -44,6 +44,7 @@ void print_help(void)
 	printf("\t-f\tRead in from raw pcm data in <source>\n");
 	printf("\t-i\tTarget IP to send data to\n");
 	printf("\t-p\tTarget Port\n");
+	printf("\t-d\tEnable debug\n");
 
 }
 
@@ -78,6 +79,7 @@ void handle_args(int argc, char ** argv)
 
 int main(int argc, char ** argv)
 {
+    int count = 0;
 
     if (argc < 2) {
 		print_help();
@@ -129,8 +131,15 @@ int main(int argc, char ** argv)
       /* send small carrier messages per row, if greater than a threshold,
          send the index that indicates an object is there              */
       for (i = 0; i < NUM_TRIGGERS; i = i + 1){
-          if (debug){
+         if (debug){
               print_data_line(&send_data[NUM_TRIGGERS*i], MAX_RANGE_INDEX_PRINT);
+          }
+          else {
+              for (j = 0; j < size_of_sendarray; j++) {
+                 if (send_data[NUM_TRIGGERS*i + j] >= POWER_CUTOFF)
+                    net_send_data(count, j);
+              }
+              count++;
           }
       }
     }

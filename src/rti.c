@@ -40,7 +40,7 @@
 //#define PRINT_IFFT
 //#define PRINT_AVERAGED
 //#define PRINT_CANCELOR
-#define PRINT_FINAL
+//#define PRINT_FINAL
 
 static char* start;
 static rdata_t* ifft_array;
