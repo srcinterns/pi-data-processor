@@ -1,7 +1,9 @@
 #ifndef DBV_H
 #define DBV
 
-void dbv(float* array, int size);
+#include "radar_config.h"
+
+void dbv(rdata_t* array, int size);
 
 
 #endif

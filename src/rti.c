@@ -40,14 +40,16 @@
 //#define PRINT_IFFT
 //#define PRINT_AVERAGED
 //#define PRINT_CANCELOR
+#define PRINT_FINAL
 
 static char* start;
-static float* ifft_array;
+static rdata_t* ifft_array;
+
 
 /* FIND_TRIGGER_START - given the trigger array, if the data is greater
  * than a certain threshold, mark in the "start" array that value is
  * greater than the threshold.  Both arrays are meant to be of array size.*/
-void find_trigger_start(float* trigg_array, char* start, int array_size){
+void find_trigger_start(rdata_t* trigg_array, char* start, int array_size){
    int i;
 
    assert(trigg_array != NULL);
@@ -82,11 +84,11 @@ int none(char* array, int start, int stop){
 /* MEAN - find the average of the array over
 *   the specified interval.  Both start and
 *   stop are inclusive                    */
-float mean(float* array, int start, int stop){
+rdata_t mean(rdata_t* array, int start, int stop){
 
    int i;
-   float sum = 0;
-   float count = 0;
+   rdata_t sum = 0;
+   rdata_t count = 0;
 
    assert(array != NULL);
 
@@ -98,16 +100,16 @@ float mean(float* array, int start, int stop){
 
 }
 
-/*ABS - find the absolute value of a float*/
-float abs_value(float value){
+/*ABS - find the absolute value of a rdata_t*/
+rdata_t abs_value(rdata_t value){
   if (value < 0.0)
     return -1.0*value;
   return value;
 }
 
-/*FLOAT COPY - copy the elements from one float array
+/*RDATA_T COPY - copy the elements from one rdata_t array
  * to another specified by a certain amount*/
-void float_cpy(float* arrayA, float* arrayB, int amount){
+void rdata_t_cpy(rdata_t* arrayA, rdata_t* arrayB, int amount){
   int i;
 
   assert(arrayA != NULL);
@@ -119,9 +121,9 @@ void float_cpy(float* arrayA, float* arrayB, int amount){
 }
 
 
-/*FLOAT ADD IMMEDIATE - add a scalar value
- * from all the elements in the float array*/
-void float_addi(float* arrayA, float value, int size){
+/*RDATA_T ADD IMMEDIATE - add a scalar value
+ * from all the elements in the rdata_t array*/
+void rdata_t_addi(rdata_t* arrayA, rdata_t value, int size){
   int i;
 
   assert(arrayA != NULL);
@@ -132,7 +134,7 @@ void float_addi(float* arrayA, float value, int size){
 }
 
 /*SUBTRACT ARRAY - arrayA[i] = arrayB[i] - arrayA[i]*/
-void sub_array(float* arrayA, float* arrayB, int size){
+void sub_array(rdata_t* arrayA, rdata_t* arrayB, int size){
     int i;
 
     assert(arrayA != NULL);
@@ -143,21 +145,21 @@ void sub_array(float* arrayA, float* arrayB, int size){
 }
 
 /*INTENSIFY - make data into a value from 0 to 255*/
-void intensify(char* char_array, float* float_array, int size){
+void intensify(char* char_array, rdata_t* rdata_t_array, int size){
   int i;
-  float temp_float;
+  rdata_t temp_rdata_t;
   int temp;
 
   assert(char_array != NULL);
-  assert(float_array != NULL);
+  assert(rdata_t_array != NULL);
 
   for (i = 0; i < size; i++){
-    temp_float  = float_array[i] + 80;
+    temp_rdata_t  = rdata_t_array[i] + 80;
 
-    if (temp_float < 0)
-        temp_float = 0;
+    if (temp_rdata_t < 0)
+        temp_rdata_t = 0;
 
-    temp = floorf(((temp_float/80.0)*255));
+    temp = floorf(((temp_rdata_t/80.0)*255));
 
     if (temp > 255)
       temp = 255;
@@ -169,9 +171,9 @@ void intensify(char* char_array, float* float_array, int size){
 
 /*FIND MAX - find that maximum value in the
  * array*/
-float find_max(float* array, int size){
+rdata_t find_max(rdata_t* array, int size){
     int i;
-    float max = 0;
+    rdata_t max = 0;
 
     assert(array != NULL);
 
@@ -188,7 +190,7 @@ float find_max(float* array, int size){
 void init_processing(){
     size_of_sendarray = init_fft(SAMPLES_PER_PULSE);
     start = calloc(DATA_BUFFER_SIZE, sizeof(char));
-    ifft_array = calloc(size_of_sendarray, sizeof(float));
+    ifft_array = calloc(size_of_sendarray, sizeof(rdata_t));
 
 }
 
@@ -206,11 +208,11 @@ void clean_up_processing(){
  * pulse count into a 2 dimensional array, response_parsed.
  * NOTE: intensity_time must be of size NUM_TRIGGERS*SAMPLES_PER_PULSE*/
 void process_radar_data(char* intensity_time,
-                      float* trigger, float* response, int buf_size){
+                      rdata_t* trigger, rdata_t* response, int buf_size){
 
    int count = 0;
    int i, j;
-   float average, max;
+   rdata_t average, max;
 
    assert(intensity_time != NULL);
    assert(trigger != NULL);
@@ -218,7 +220,7 @@ void process_radar_data(char* intensity_time,
 
    /*for size of radar data to be correct, init_processing must be
     *called before this function                                */
-   float response_parsed[NUM_TRIGGERS][size_of_sendarray];
+   rdata_t response_parsed[NUM_TRIGGERS][size_of_sendarray];
 
    /*create a simplied edge trigger based off the transmit signal*/
    memset(start, 0, buf_size);
@@ -235,7 +237,7 @@ void process_radar_data(char* intensity_time,
      /*find the trigger and if found, load data into the 2-d array,
        while keeping track of the time of the pulse*/
      if (start[i] == 1 && none(start,i-11,i-1) == 0){
-       float_cpy(response_parsed[count], &response[i], SAMPLES_PER_PULSE);
+       rdata_t_cpy(response_parsed[count], &response[i], SAMPLES_PER_PULSE);
        count = count + 1;
      }
 
@@ -258,7 +260,7 @@ void process_radar_data(char* intensity_time,
    /*subtract the avarage value of each sub array!*/
    for(i = 0; i < NUM_TRIGGERS; i++){
        average = mean(response_parsed[i], 0, SAMPLES_PER_PULSE-1);
-       float_addi(response_parsed[i], -1.0*average, SAMPLES_PER_PULSE);
+       rdata_t_addi(response_parsed[i], -1.0*average, SAMPLES_PER_PULSE);
    }
 
 
@@ -293,8 +295,7 @@ void process_radar_data(char* intensity_time,
    /*ifft and convert to intensity values*/
    for(i = 0; i < NUM_TRIGGERS; i++){
        ifft(ifft_array,response_parsed[i]);
-       float_cpy(response_parsed[i], ifft_array, size_of_sendarray);
-
+       rdata_t_cpy(response_parsed[i], ifft_array, size_of_sendarray);
        dbv(response_parsed[i], size_of_sendarray);
    }
 
@@ -310,7 +311,7 @@ void process_radar_data(char* intensity_time,
 
    max = find_max(&response_parsed[0][0], NUM_TRIGGERS*size_of_sendarray);
 
-   float_addi(&response_parsed[0][0], -1.0*max, NUM_TRIGGERS*size_of_sendarray);
+   rdata_t_addi(&response_parsed[0][0], -1.0*max, NUM_TRIGGERS*size_of_sendarray);
 
    intensify(intensity_time, &(response_parsed[0][0]), size_of_sendarray*NUM_TRIGGERS);
 
@@ -318,7 +319,7 @@ void process_radar_data(char* intensity_time,
 #ifdef PRINT_FINAL
    for (i = 0; i < NUM_TRIGGERS; i++){
      for (j = 0; j < SAMPLES_PER_PULSE/10; j++) {
-       printf("%d ", (int)floor(intensity_time[NUM_TRIGGERS*i+j]));
+         printf("%d ", (unsigned int)(unsigned char)floor(intensity_time[NUM_TRIGGERS*i+j]));
      }
      printf("\n");
    }

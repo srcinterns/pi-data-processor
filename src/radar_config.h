@@ -4,7 +4,7 @@
 
 /*radar parameters*/
 #define SAMPLING_RATE (44100.0)
-#define PULSE_TIME (20.0*0.001)
+#define PULSE_TIME (19.0*0.001)
 #define SAMPLES_PER_PULSE (((int)(PULSE_TIME*SAMPLING_RATE))/1)
 #define NUM_TRIGGERS (5)
 
@@ -22,7 +22,11 @@
 #define TRUE (1)
 #define FALSE (0)
 
+#define MAX_RANGE_INDEX_PRINT (100)
+
 char* dump_buffer;
 int size_of_sendarray;
+
+typedef double rdata_t;
 
 #endif

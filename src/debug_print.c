@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BARRIER (75)
+#define BARRIER (10)
+#define BIN_SIZE (1)
 
 void print_data_line(char* buffer, int size){
 

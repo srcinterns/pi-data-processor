@@ -16,12 +16,13 @@
 
 char* send_data;
 int16_t* temp_buffer;
-float *trigger;
-float *response;
+rdata_t *trigger;
+rdata_t *response;
 FILE * pcmfile = NULL;
 char alsa_device[255] = {0};
 char target_ip[16] = {0};
 char target_port[6] = {0};
+char debug = FALSE;
 
 void sigint(int x)
 {
@@ -55,6 +56,7 @@ void handle_args(int argc, char ** argv)
 			case 'f': pcmfile = fopen(argv[++i], "r"); mode--; break;
 			case 'i': strcpy(target_ip, argv[++i]);            break;
 			case 'p': strcpy(target_port, argv[++i]);          break;
+            case 'd': debug = TRUE;                            break;
 			default:  print_help(), exit(1);                   break;
 		}
 	}
@@ -91,13 +93,13 @@ int main(int argc, char ** argv)
     send_data = (char*) calloc(NUM_TRIGGERS*size_of_sendarray, sizeof(char));
     temp_buffer = (int16_t*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
     dump_buffer = (char*)calloc(2*DATA_BUFFER_SIZE, sizeof(signed short));
-    trigger = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
-    response = (float*) calloc(DATA_BUFFER_SIZE, sizeof(float));
+    trigger = (rdata_t*) calloc(DATA_BUFFER_SIZE, sizeof(rdata_t));
+    response = (rdata_t*) calloc(DATA_BUFFER_SIZE, sizeof(rdata_t));
     int i, j;
 
 
     for(;;) {
-        /* read from the audio device and store in 2 float arrays*/
+        /* read from the audio device and store in 2 rdata_t arrays*/
         //init_alsa_device(argv[1]);
 
 
@@ -118,8 +120,8 @@ int main(int argc, char ** argv)
 
 
 
-      s16_to_float_array(trigger, DATA_BUFFER_SIZE, 1, 1, temp_buffer);
-      s16_to_float_array(response, DATA_BUFFER_SIZE, 0, 1, temp_buffer);
+      s16_to_rdata_array(trigger, DATA_BUFFER_SIZE, 1, 2, temp_buffer);
+      s16_to_rdata_array(response, DATA_BUFFER_SIZE, 0, 2, temp_buffer);
 
       /* send_data[0][0] converts 2-d array to char*, pointing to first value*/
       process_radar_data(send_data, trigger, response, DATA_BUFFER_SIZE);
@@ -127,7 +129,9 @@ int main(int argc, char ** argv)
       /* send small carrier messages per row, if greater than a threshold,
          send the index that indicates an object is there              */
       for (i = 0; i < NUM_TRIGGERS; i = i + 1){
-          print_data_line(&send_data[NUM_TRIGGERS*i], 3*size_of_sendarray/4);
+          if (debug){
+              print_data_line(&send_data[NUM_TRIGGERS*i], MAX_RANGE_INDEX_PRINT);
+          }
       }
     }
 

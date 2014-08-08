@@ -9,7 +9,7 @@
  *  The init_fft plan should be called on program start
  *  up and the end_fft should be called on close.  Finally
  *  ifft function can be easily called to do an ifft
- *  on two float arrays.  This ifft will only create
+ *  on two rdata_t arrays.  This ifft will only create
  *  real time domain data                               */
 /********************************************************/
 
@@ -46,21 +46,22 @@ void end_fft(){
     free(out);
 }
 
-/* FLOAT TO DOUBLE - convert an array of floats
+/* RDATA_T TO DOUBLE - convert an array of rdata_ts
  * to an array of doubles of size N (stored globally)*/
-void flt2dbl(fftw_complex* array_complex, float* array_flt){
+void flt2dbl(fftw_complex* array_complex, rdata_t* array_flt){
     int i;
     assert(array_complex != NULL);
     assert(array_flt != NULL);
 
-    for (i = 0; i < N; i++)
+    for (i = 0; i < N; i++){
         array_complex[i][0] = (double)array_flt[i];
         array_complex[i][1] = 0;
+    }
 }
 
-/*DOUBLE TO FLOAT - convert a double array to a
- * float array of size N (stored globally)*/
-void dbl2flt(float* array_flt, fftw_complex* array_complex){
+/*DOUBLE TO RDATA_T - convert a double array to a
+ * rdata_t array of size N (stored globally)*/
+void dbl2flt(rdata_t* array_flt, fftw_complex* array_complex){
 
     int i;
     double A, B;
@@ -73,14 +74,14 @@ void dbl2flt(float* array_flt, fftw_complex* array_complex){
          *do this*/
         A = array_complex[i][0]/N;
         B = array_complex[i][1]/N;
-        array_flt[i] = (float)sqrt( A*A + B*B);
+        array_flt[i] = (rdata_t)sqrt( A*A + B*B);
      }
 }
 
 /*IFFT - copy the data into the ifft buffer,
  * execute the ifft, then copy it to the output
  * buffer*/
-void ifft(float* time_domain, float* freq_domain){
+void ifft(rdata_t* time_domain, rdata_t* freq_domain){
 
     flt2dbl(in, freq_domain);
 
